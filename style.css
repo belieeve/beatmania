@@ -1,0 +1,245 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(135deg, #000428, #004e92);
+    font-family: Arial, sans-serif;
+    color: white;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    gap: 10px;
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px #00ffff;
+    color: #00ffff;
+}
+
+.score-area {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+#gameCanvas {
+    border: 3px solid #00ffff;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #001133, #000011);
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+    margin-bottom: 10px;
+    max-width: 100%;
+    height: auto;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0 20px 0;
+    justify-content: center;
+    position: relative;
+}
+
+.key {
+    width: 60px;
+    height: 100px;
+    background: linear-gradient(180deg, #333, #111);
+    border: 2px solid #666;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    user-select: none;
+}
+
+.key[data-key="KeyS"] { border-color: #ff4444; background: linear-gradient(180deg, #ff4444, #aa2222); }
+.key[data-key="KeyD"] { border-color: #44ff44; background: linear-gradient(180deg, #44ff44, #22aa22); }
+.key[data-key="KeyF"] { border-color: #4444ff; background: linear-gradient(180deg, #4444ff, #2222aa); }
+.key[data-key="KeyJ"] { border-color: #ffff44; background: linear-gradient(180deg, #ffff44, #aaaa22); }
+.key[data-key="KeyK"] { border-color: #ff44ff; background: linear-gradient(180deg, #ff44ff, #aa22aa); }
+.key[data-key="KeyL"] { border-color: #ff8844; background: linear-gradient(180deg, #ff8844, #aa5522); }
+
+.key:hover {
+    background: linear-gradient(180deg, #555, #333);
+}
+
+.key.active {
+    background: linear-gradient(180deg, #00ffff, #0099cc);
+    color: #000;
+    box-shadow: 0 0 20px #00ffff;
+    transform: scale(0.95);
+}
+
+
+.judgment {
+    font-size: 3rem;
+    font-weight: bold;
+    text-shadow: 0 0 20px currentColor;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px 0;
+}
+
+.judgment.perfect { color: #ffff00; }
+.judgment.great { color: #00ff00; }
+.judgment.good { color: #0080ff; }
+.judgment.bad { color: #ff8000; }
+.judgment.miss { color: #ff0000; }
+
+.menu {
+    display: flex;
+    gap: 20px;
+    margin: 20px 0;
+    justify-content: center;
+    width: 100%;
+    z-index: 1000;
+    position: relative;
+}
+
+.menu button {
+    padding: 15px 30px;
+    background: linear-gradient(180deg, #006600, #004400);
+    border: 3px solid #00aa00;
+    border-radius: 8px;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-shadow: 0 0 10px #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 170, 0, 0.3);
+    min-width: 100px;
+}
+
+.menu button:hover:not(:disabled) {
+    background: linear-gradient(180deg, #008800, #006600);
+    box-shadow: 0 0 10px #00aa00;
+}
+
+.menu button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.song-select {
+    margin-top: 10px;
+}
+
+.song-select select {
+    padding: 10px;
+    background: #333;
+    border: 2px solid #666;
+    border-radius: 5px;
+    color: white;
+    font-size: 1rem;
+}
+
+.level-select {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.level-label {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #00ffff;
+    margin-bottom: 10px;
+    text-shadow: 0 0 10px #00ffff;
+}
+
+.level-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.level-btn {
+    padding: 12px 20px;
+    background: linear-gradient(180deg, #333333, #111111);
+    border: 2px solid #666666;
+    border-radius: 8px;
+    color: #cccccc;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-shadow: 0 0 5px currentColor;
+    min-width: 100px;
+}
+
+.level-btn:hover {
+    border-color: #ffffff;
+    color: #ffffff;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+.level-btn.active {
+    background: linear-gradient(180deg, #0066ff, #003399);
+    border-color: #00aaff;
+    color: #ffffff;
+    box-shadow: 0 0 20px rgba(0, 170, 255, 0.5);
+    transform: scale(1.05);
+}
+
+.level-btn[data-level="easy"].active {
+    background: linear-gradient(180deg, #00aa00, #006600);
+    border-color: #00ff00;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+}
+
+.level-btn[data-level="hard"].active {
+    background: linear-gradient(180deg, #aa0000, #660000);
+    border-color: #ff0000;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+}
+
+.level-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: linear-gradient(180deg, #222222, #111111) !important;
+    border-color: #333333 !important;
+    color: #666666 !important;
+    box-shadow: none !important;
+    transform: none !important;
+}
+
+@keyframes noteHit {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+.hit-effect {
+    animation: noteHit 0.2s ease-in-out;
+}
+
+@keyframes combo-flash {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.combo-flash {
+    animation: combo-flash 0.3s ease-in-out;
+}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beatmania Style Music Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="title">BEATMANIA STYLE</div>
+        
+        <div class="score-area">
+            <div class="score">Score: <span id="score">0</span></div>
+            <div class="combo">Combo: <span id="combo">0</span></div>
+        </div>
+        
+        <canvas id="gameCanvas" width="900" height="500"></canvas>
+        
+        <div class="judgment" id="judgment"></div>
+        
+        <div class="controls">
+            <div class="key" data-key="KeyS">S</div>
+            <div class="key" data-key="KeyD">D</div>
+            <div class="key" data-key="KeyF">F</div>
+            <div class="key" data-key="KeyJ">J</div>
+            <div class="key" data-key="KeyK">K</div>
+            <div class="key" data-key="KeyL">L</div>
+        </div>
+        
+        <div class="menu">
+            <button id="startBtn">START</button>
+            <button id="pauseBtn" disabled>PAUSE</button>
+            <button id="resetBtn">RESET</button>
+        </div>
+        
+        <div class="song-select">
+            <select id="songSelect">
+                <option value="sample">Sample Song</option>
+            </select>
+        </div>
+        
+        <div class="level-select">
+            <div class="level-label">DIFFICULTY</div>
+            <div class="level-buttons">
+                <button class="level-btn active" data-level="easy">BEGINNER</button>
+                <button class="level-btn" data-level="normal">NORMAL</button>
+                <button class="level-btn" data-level="hard">HYPER</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="game.js"></script>
+</body>
+</html>
