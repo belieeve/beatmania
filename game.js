@@ -26,7 +26,8 @@ class BeatmaniaGame {
         this.notes = [];
         this.activeKeys = new Set();
         this.noteSpeed = 200;
-        this.judgeLineY = 500;
+        this.judgeLineY = 400;
+        this.keyboardY = 430;
         this.judgeWindow = {
             perfect: 50,
             great: 100,
@@ -57,6 +58,7 @@ class BeatmaniaGame {
         // 初期画面を描画
         this.drawLanes();
         this.drawJudgeLine();
+        this.drawKeyboards();
     }
     
     setupEventListeners() {
@@ -66,14 +68,6 @@ class BeatmaniaGame {
         
         document.addEventListener('keydown', (e) => this.handleKeyDown(e));
         document.addEventListener('keyup', (e) => this.handleKeyUp(e));
-        
-        this.lanes.forEach(lane => {
-            const keyElement = document.querySelector(`[data-key="${lane.key}"]`);
-            if (keyElement) {
-                keyElement.addEventListener('mousedown', () => this.handleKeyPress(lane.key));
-                keyElement.addEventListener('mouseup', () => this.handleKeyRelease(lane.key));
-            }
-        });
         
         document.querySelectorAll('.level-btn').forEach(btn => {
             btn.addEventListener('click', (e) => this.selectLevel(e.target.dataset.level));
@@ -222,6 +216,13 @@ class BeatmaniaGame {
         return chart.sort((a, b) => a.time - b.time);
     }
     
+    hexToRgba(hex, alpha) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    
     startGame() {
         if (!this.audioContext) {
             alert('Audio system not ready. Please try again.');
@@ -299,25 +300,13 @@ class BeatmaniaGame {
         if (!this.isPlaying || this.isPaused) return;
         
         this.activeKeys.add(keyCode);
-        this.updateKeyVisual(keyCode, true);
         this.checkHit(keyCode);
     }
     
     handleKeyRelease(keyCode) {
         this.activeKeys.delete(keyCode);
-        this.updateKeyVisual(keyCode, false);
     }
     
-    updateKeyVisual(keyCode, active) {
-        const keyElement = document.querySelector(`[data-key="${keyCode}"]`);
-        if (keyElement) {
-            if (active) {
-                keyElement.classList.add('active');
-            } else {
-                keyElement.classList.remove('active');
-            }
-        }
-    }
     
     checkHit(keyCode) {
         const lane = this.lanes.find(l => l.key === keyCode);
@@ -499,15 +488,11 @@ class BeatmaniaGame {
         this.updateUI();
         this.clearJudgment();
         
-        // キーの視覚状態をリセット
-        this.lanes.forEach(lane => {
-            this.updateKeyVisual(lane.key, false);
-        });
-        
         // キャンバスをクリア
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.drawLanes();
         this.drawJudgeLine();
+        this.drawKeyboards();
     }
     
     render() {
@@ -515,42 +500,128 @@ class BeatmaniaGame {
         
         this.drawLanes();
         this.drawJudgeLine();
+        this.drawKeyboards();
         this.drawNotes();
     }
     
     drawLanes() {
         this.lanes.forEach((lane, index) => {
-            const gradient = this.ctx.createLinearGradient(lane.x, 0, lane.x + 60, 0);
-            gradient.addColorStop(0, 'rgba(255,255,255,0.1)');
-            gradient.addColorStop(0.5, 'rgba(255,255,255,0.05)');
-            gradient.addColorStop(1, 'rgba(255,255,255,0.1)');
+            const isActive = this.activeKeys.has(lane.key);
             
-            this.ctx.fillStyle = gradient;
-            this.ctx.fillRect(lane.x, 0, 60, this.canvas.height);
+            this.ctx.save();
             
-            this.ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-            this.ctx.lineWidth = 2;
+            if (isActive) {
+                // キーが押されている時は明るく光らせる
+                const gradient = this.ctx.createLinearGradient(lane.x, 0, lane.x + 60, 0);
+                const laneColor = this.hexToRgba(lane.color, 0.3);
+                gradient.addColorStop(0, laneColor);
+                gradient.addColorStop(0.5, this.hexToRgba(lane.color, 0.2));
+                gradient.addColorStop(1, laneColor);
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.shadowColor = lane.color;
+                this.ctx.shadowBlur = 30;
+                this.ctx.fillRect(lane.x, 0, 60, this.canvas.height);
+                
+                // 枠線も光らせる
+                this.ctx.strokeStyle = lane.color;
+                this.ctx.lineWidth = 3;
+                this.ctx.shadowBlur = 15;
+            } else {
+                // 通常状態
+                const gradient = this.ctx.createLinearGradient(lane.x, 0, lane.x + 60, 0);
+                gradient.addColorStop(0, 'rgba(255,255,255,0.1)');
+                gradient.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+                gradient.addColorStop(1, 'rgba(255,255,255,0.1)');
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(lane.x, 0, 60, this.canvas.height);
+                
+                this.ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+                this.ctx.lineWidth = 2;
+            }
+            
             this.ctx.beginPath();
             this.ctx.moveTo(lane.x, 0);
             this.ctx.lineTo(lane.x, this.canvas.height);
             this.ctx.moveTo(lane.x + 60, 0);
             this.ctx.lineTo(lane.x + 60, this.canvas.height);
             this.ctx.stroke();
+            
+            this.ctx.restore();
         });
     }
     
     drawJudgeLine() {
+        this.ctx.save();
+        
+        // 押されているキーがある場合はジャッジライン周辺を光らせる
+        this.lanes.forEach(lane => {
+            if (this.activeKeys.has(lane.key)) {
+                this.ctx.fillStyle = this.hexToRgba(lane.color, 0.2);
+                this.ctx.fillRect(lane.x, this.judgeLineY - 20, 60, 40);
+            }
+        });
+        
+        // メインのジャッジライン
         this.ctx.strokeStyle = '#ffffff';
         this.ctx.lineWidth = 4;
         this.ctx.beginPath();
-        this.ctx.moveTo(130, this.judgeLineY);
-        this.ctx.lineTo(520, this.judgeLineY);
+        this.ctx.moveTo(150, this.judgeLineY);
+        this.ctx.lineTo(560, this.judgeLineY);
         this.ctx.stroke();
         
         this.ctx.shadowColor = '#ffffff';
         this.ctx.shadowBlur = 10;
         this.ctx.stroke();
-        this.ctx.shadowBlur = 0;
+        
+        this.ctx.restore();
+    }
+    
+    drawKeyboards() {
+        this.lanes.forEach((lane, index) => {
+            const isActive = this.activeKeys.has(lane.key);
+            
+            this.ctx.save();
+            
+            // キーボードの背景
+            if (isActive) {
+                this.ctx.fillStyle = lane.color;
+                this.ctx.shadowColor = lane.color;
+                this.ctx.shadowBlur = 30;
+                
+                // 追加の光るエフェクト
+                this.ctx.beginPath();
+                this.ctx.arc(lane.x + 30, this.keyboardY + 30, 40, 0, Math.PI * 2);
+                this.ctx.fillStyle = this.hexToRgba(lane.color, 0.3);
+                this.ctx.fill();
+                
+                this.ctx.fillStyle = lane.color;
+            } else {
+                this.ctx.fillStyle = '#333333';
+            }
+            
+            // キーボードを描画
+            this.ctx.fillRect(lane.x + 5, this.keyboardY, 50, 60);
+            
+            // 枠線
+            this.ctx.strokeStyle = isActive ? '#ffffff' : lane.color;
+            this.ctx.lineWidth = isActive ? 3 : 2;
+            this.ctx.strokeRect(lane.x + 5, this.keyboardY, 50, 60);
+            
+            // キー文字
+            this.ctx.fillStyle = isActive ? '#000000' : '#ffffff';
+            this.ctx.font = 'bold 16px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            this.ctx.fillText(
+                lane.key.replace('Key', ''),
+                lane.x + 30,
+                this.keyboardY + 30
+            );
+            
+            this.ctx.restore();
+        });
     }
     
     drawNotes() {
