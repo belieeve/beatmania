@@ -28,11 +28,16 @@
 
 ## 🚀 **プレイ方法**
 
-1. **[デモページ](https://belieeve.github.io/beatmania/)** にアクセス
-2. **GAME START** を押す
-3. **UPLOAD MUSIC** で MP3 ファイルをアップロード
-4. **楽曲選択画面** で楽曲と難易度を選択
-5. **S D F J K L** キーでプレイ開始！
+### 🎵 **方法1: 専用アップロードサイト（推奨）**
+1. **[楽曲アップロード](https://belieeve.github.io/beatmania/upload-site.html)** で楽曲をアップロード
+2. **[ゲームサイト](https://belieeve.github.io/beatmania/)** で自動的に楽曲が利用可能
+3. **楽曲選択** → **難易度選択** → **プレイ開始**
+
+### 🎮 **方法2: ゲーム内アップロード**
+1. **[ゲームサイト](https://belieeve.github.io/beatmania/)** → **GAME START**
+2. **UPLOAD MUSIC** で MP3 ファイルをアップロード  
+3. **楽曲選択画面** で楽曲と難易度を選択
+4. **S D F J K L** キーでプレイ開始！
 
 ## 💻 **ローカル環境での実行**
 
@@ -51,7 +56,8 @@ open index.html
 
 ```
 beatmania/
-├── index.html         # メインHTML
+├── index.html         # メインゲームサイト
+├── upload-site.html   # 楽曲アップロード専用サイト
 ├── game_new.js        # ゲームエンジン
 ├── songs.js           # 楽曲データベース
 ├── style.css          # スタイルシート

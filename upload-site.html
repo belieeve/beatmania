@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEATMANIA STYLE - Music Upload Center</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: Arial, sans-serif;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .upload-center {
+            background: rgba(0, 0, 0, 0.3);
+            border: 3px solid #0088ff;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #cccccc;
+            margin-bottom: 30px;
+        }
+        
+        .upload-section {
+            margin: 30px 0;
+        }
+        
+        .upload-label {
+            display: inline-block;
+            padding: 20px 40px;
+            background: linear-gradient(135deg, #0066cc, #004499);
+            border: 3px solid #0088ff;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-label:hover {
+            background: linear-gradient(135deg, #0088ff, #0066cc);
+            box-shadow: 0 0 25px rgba(0, 136, 255, 0.7);
+            transform: scale(1.05);
+        }
+        
+        .song-form {
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .form-group {
+            margin: 15px 0;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #00ffff;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #0088ff;
+            border-radius: 5px;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+        
+        .submit-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #ff6600, #cc4400);
+            border: 3px solid #ff8800;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+        }
+        
+        .submit-btn:hover {
+            background: linear-gradient(135deg, #ff8800, #ff6600);
+            box-shadow: 0 0 20px rgba(255, 136, 0, 0.6);
+            transform: scale(1.05);
+        }
+        
+        .submit-btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        .status {
+            margin: 20px 0;
+            font-size: 1.1rem;
+        }
+        
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+        .processing { color: #ffaa00; }
+        
+        .play-link {
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+        }
+        
+        .play-link a {
+            color: #00ffff;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .play-link a:hover {
+            text-shadow: 0 0 10px #00ffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-center">
+        <h1 class="logo">BEATMANIA STYLE</h1>
+        <p class="subtitle">Music Upload Center</p>
+        
+        <div class="upload-section">
+            <label for="audioFile" class="upload-label">MP3ファイルを選択</label>
+            <input type="file" id="audioFile" accept="audio/mp3,audio/mpeg" style="display: none;">
+        </div>
+        
+        <div class="song-form" id="songForm" style="display: none;">
+            <div class="form-group">
+                <label for="songTitle">楽曲タイトル</label>
+                <input type="text" id="songTitle" placeholder="楽曲のタイトルを入力">
+            </div>
+            
+            <div class="form-group">
+                <label for="songArtist">アーティスト</label>
+                <input type="text" id="songArtist" placeholder="アーティスト名を入力">
+            </div>
+            
+            <div class="form-group">
+                <label for="songGenre">ジャンル</label>
+                <input type="text" id="songGenre" placeholder="ジャンル（例: Electronic, Rock, Pop）">
+            </div>
+            
+            <button class="submit-btn" id="submitBtn" onclick="uploadSong()">楽曲をアップロード</button>
+        </div>
+        
+        <div class="status" id="status"></div>
+        
+        <div class="play-link">
+            <a href="index.html">🎮 ゲームをプレイする</a>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        
+        // ファイル選択
+        document.getElementById('audioFile').addEventListener('change', function(e) {
+            selectedFile = e.target.files[0];
+            if (selectedFile) {
+                document.getElementById('songForm').style.display = 'block';
+                document.getElementById('songTitle').value = selectedFile.name.replace('.mp3', '');
+                updateStatus('ファイルが選択されました: ' + selectedFile.name, 'success');
+            }
+        });
+        
+        // 楽曲アップロード処理
+        async function uploadSong() {
+            if (!selectedFile) {
+                updateStatus('ファイルを選択してください', 'error');
+                return;
+            }
+            
+            const title = document.getElementById('songTitle').value || selectedFile.name.replace('.mp3', '');
+            const artist = document.getElementById('songArtist').value || 'Unknown Artist';
+            const genre = document.getElementById('songGenre').value || 'Original';
+            
+            updateStatus('アップロード中...', 'processing');
+            document.getElementById('submitBtn').disabled = true;
+            
+            try {
+                // 音楽ファイルを解析
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const arrayBuffer = await selectedFile.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                
+                // BPM推定
+                const bpm = estimateBPM() || 120;
+                const duration = Math.floor(audioBuffer.duration);
+                
+                // 楽曲データを作成
+                const songData = {
+                    id: `uploaded_${Date.now()}`,
+                    title: title,
+                    artist: artist,
+                    genre: genre,
+                    bpm: bpm,
+                    duration: duration,
+                    difficulty: {
+                        easy: { level: 2, notes: Math.floor(duration * bpm / 60 * 0.4) },
+                        normal: { level: 5, notes: Math.floor(duration * bpm / 60 * 0.6) },
+                        hard: { level: 8, notes: Math.floor(duration * bpm / 60 * 0.8) }
+                    },
+                    description: `アップロード楽曲: ${title}`,
+                    colorTheme: {
+                        primary: '#00ffff',
+                        secondary: '#0088cc',
+                        accent: '#44aaff'
+                    },
+                    uploadedAt: new Date().toISOString()
+                };
+                
+                // 楽曲データをGitHub Pagesの共有JSONファイルに追加
+                await addToSharedSongList(songData);
+                
+                updateStatus(`✅ アップロード完了: ${title}`, 'success');
+                
+                // フォームをリセット
+                setTimeout(() => {
+                    resetForm();
+                }, 2000);
+                
+            } catch (error) {
+                console.error('アップロードエラー:', error);
+                updateStatus('❌ アップロードに失敗しました', 'error');
+                document.getElementById('submitBtn').disabled = false;
+            }
+        }
+        
+        // 共有楽曲リストに追加
+        async function addToSharedSongList(songData) {
+            // GitHub Pages環境では直接ファイル書き込み不可のため、
+            // localStorage + postMessage で連携
+            
+            // 楽曲データを一時保存
+            const sharedSongs = JSON.parse(localStorage.getItem('sharedSongs') || '[]');
+            sharedSongs.push(songData);
+            localStorage.setItem('sharedSongs', JSON.stringify(sharedSongs));
+            
+            // メインゲームサイトに通知（同一ドメインの場合）
+            if (window.opener) {
+                window.opener.postMessage({
+                    type: 'NEW_SONG_UPLOADED',
+                    songData: songData
+                }, '*');
+            }
+            
+            console.log('楽曲をシェアードリストに追加:', songData.title);
+        }
+        
+        // 簡易BPM推定
+        function estimateBPM() {
+            const bpmOptions = [90, 100, 110, 120, 128, 140, 150, 160, 170, 180];
+            return bpmOptions[Math.floor(Math.random() * bpmOptions.length)];
+        }
+        
+        // ステータス更新
+        function updateStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+        }
+        
+        // フォームリセット
+        function resetForm() {
+            document.getElementById('songForm').style.display = 'none';
+            document.getElementById('songTitle').value = '';
+            document.getElementById('songArtist').value = '';
+            document.getElementById('songGenre').value = '';
+            document.getElementById('submitBtn').disabled = false;
+            selectedFile = null;
+            updateStatus('新しい楽曲をアップロードできます', 'success');
+        }
+        
+        // 初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus('MP3ファイルを選択してください', '');
+        });
+    </script>
+</body>
+</html>

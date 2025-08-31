@@ -990,10 +990,97 @@ function importSongData() {
     input.click();
 }
 
+// 共有楽曲を読み込み（アップロードサイトとの連携）
+function loadSharedSongs() {
+    try {
+        const sharedSongs = JSON.parse(localStorage.getItem('sharedSongs') || '[]');
+        let loadedCount = 0;
+        
+        sharedSongs.forEach(songData => {
+            // 既存楽曲との重複チェック
+            const existingSong = getSongById(songData.id);
+            if (!existingSong) {
+                addSong(songData);
+                loadedCount++;
+            }
+        });
+        
+        if (loadedCount > 0) {
+            console.log(`🎵 アップロードサイトから ${loadedCount}曲を読み込みました`);
+        }
+        
+        // 読み込み後はクリア（重複防止）
+        localStorage.removeItem('sharedSongs');
+        
+    } catch (error) {
+        console.error('共有楽曲読み込みエラー:', error);
+    }
+}
+
+// アップロードサイトからの通知を受信
+function setupCrossSiteMessaging() {
+    window.addEventListener('message', function(event) {
+        if (event.data.type === 'NEW_SONG_UPLOADED') {
+            const songData = event.data.songData;
+            
+            // 楽曲を追加
+            addSong(songData);
+            
+            // 楽曲選択画面にいる場合は更新
+            if (currentScreen === 'songSelectPage') {
+                loadSongList();
+            }
+            
+            console.log(`🆕 新しい楽曲が追加されました: ${songData.title}`);
+            
+            // 通知表示
+            showNotification(`🎵 新楽曲追加: ${songData.title}`);
+        }
+    });
+}
+
+// 通知表示
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: linear-gradient(135deg, #00aa00, #006600);
+        color: white;
+        padding: 15px 20px;
+        border-radius: 10px;
+        border: 2px solid #00ff00;
+        box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        font-weight: bold;
+        z-index: 10000;
+        animation: slideIn 0.5s ease-out;
+    `;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    // 3秒後に自動削除
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.5s ease-in';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 500);
+    }, 3000);
+}
+
 // 初期化処理
 function initializeApp() {
     // 保存された楽曲データを読み込み
     loadSongsFromStorage();
+    
+    // 共有楽曲を読み込み（アップロードサイト連携）
+    loadSharedSongs();
+    
+    // クロスサイト通信を設定
+    setupCrossSiteMessaging();
     
     // 最初はトップページを表示
     showScreen('topPage');
@@ -1002,6 +1089,7 @@ function initializeApp() {
     console.log('利用可能な楽曲:', getAllSongs());
     console.log('楽曲追加は addCustomSong() 関数を使用してください。');
     console.log('楽曲共有: exportSongData() でエクスポート、importSongData() でインポート');
+    console.log('🌐 アップロードサイト: upload-site.html');
     
     // 保存された楽曲があることを通知
     if (SONG_DATABASE.length > 0) {
