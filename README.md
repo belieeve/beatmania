@@ -4,7 +4,7 @@
 
 ## 🎮 **ライブデモ**
 
-**▶️ [BEATMANIA STYLEをプレイ](https://belieeve.github.io/beatmania/index_new.html)**
+**▶️ [BEATMANIA STYLEをプレイ](https://belieeve.github.io/beatmania/)**
 
 ## ✨ **主な機能**
 
@@ -28,7 +28,7 @@
 
 ## 🚀 **プレイ方法**
 
-1. **[デモページ](https://belieeve.github.io/beatmania/index_new.html)** にアクセス
+1. **[デモページ](https://belieeve.github.io/beatmania/)** にアクセス
 2. **GAME START** を押す
 3. **UPLOAD MUSIC** で MP3 ファイルをアップロード
 4. **楽曲選択画面** で楽曲と難易度を選択
@@ -43,21 +43,21 @@ git clone https://github.com/belieeve/beatmania.git
 # ディレクトリに移動
 cd beatmania
 
-# index_new.html をブラウザで開く
-open index_new.html
+# index.html をブラウザで開く
+open index.html
 ```
 
 ## 📁 **ファイル構成**
 
 ```
 beatmania/
-├── index_new.html     # メインHTML（新版）
-├── game_new.js        # ゲームエンジン（新版）
+├── index.html         # メインHTML
+├── game_new.js        # ゲームエンジン
 ├── songs.js           # 楽曲データベース
-├── style_new.css      # スタイルシート（新版）
-├── index.html         # 旧版HTML
+├── style.css          # スタイルシート
+├── index_new.html     # 開発版HTML
 ├── game.js            # 旧版JavaScript
-└── style.css          # 旧版CSS
+└── style_new.css      # 開発版CSS
 ```
 
 ## 🛠️ **技術スタック**
