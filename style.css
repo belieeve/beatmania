@@ -155,6 +155,126 @@ body {
     font-size: 1rem;
 }
 
+.upload-section {
+    margin-bottom: 15px;
+}
+
+.upload-label {
+    display: inline-block;
+    padding: 12px 24px;
+    background: linear-gradient(180deg, #0066cc, #004499);
+    border: 2px solid #0088ff;
+    border-radius: 8px;
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.upload-label:hover {
+    background: linear-gradient(180deg, #0088ff, #0066cc);
+    box-shadow: 0 0 15px rgba(0, 136, 255, 0.5);
+    transform: scale(1.05);
+}
+
+.upload-status {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: #cccccc;
+    text-align: center;
+}
+
+.upload-status.success {
+    color: #00ff00;
+}
+
+.upload-status.processing {
+    color: #ffaa00;
+}
+
+.upload-status.error {
+    color: #ff0000;
+}
+
+.song-library {
+    margin-top: 20px;
+}
+
+.library-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #00ffff;
+    margin-bottom: 10px;
+    text-align: center;
+    text-shadow: 0 0 10px #00ffff;
+}
+
+.song-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 2px solid #666;
+    border-radius: 8px;
+    background: #222;
+}
+
+.song-item {
+    padding: 12px;
+    border-bottom: 1px solid #444;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.song-item:last-child {
+    border-bottom: none;
+}
+
+.song-item:hover {
+    background: #333;
+}
+
+.song-item.active {
+    background: linear-gradient(180deg, #0066cc, #004499);
+    color: white;
+}
+
+.song-name {
+    font-weight: bold;
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.song-info {
+    font-size: 0.8rem;
+    color: #ccc;
+}
+
+.song-item.active .song-info {
+    color: #ddd;
+}
+
+.song-item .delete-btn {
+    float: right;
+    background: #cc0000;
+    border: none;
+    color: white;
+    border-radius: 3px;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.song-item:hover .delete-btn {
+    opacity: 1;
+}
+
+.song-item .delete-btn:hover {
+    background: #ff0000;
+}
+
 .level-select {
     margin-top: 20px;
     text-align: center;

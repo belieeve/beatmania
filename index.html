@@ -26,9 +26,21 @@
         </div>
         
         <div class="song-select">
-            <select id="songSelect">
-                <option value="sample">Sample Song</option>
-            </select>
+            <div class="upload-section">
+                <label for="audioUpload" class="upload-label">MP3をアップロード</label>
+                <input type="file" id="audioUpload" accept="audio/mp3,audio/mpeg" style="display: none;">
+                <div class="upload-status" id="uploadStatus">ファイルが選択されていません</div>
+            </div>
+            
+            <div class="song-library">
+                <div class="library-title">楽曲ライブラリ</div>
+                <div class="song-list" id="songList">
+                    <div class="song-item active" data-song="-1">
+                        <div class="song-name">Sample Song</div>
+                        <div class="song-info">3:00 | BPM: 120</div>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div class="level-select">

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BEATMANIA STYLE</title>
+    <link rel="stylesheet" href="style_new.css">
+</head>
+<body>
+    <!-- トップページ -->
+    <div id="topPage" class="screen active">
+        <div class="top-container">
+            <div class="logo-section">
+                <h1 class="main-logo">BEATMANIA</h1>
+                <h2 class="sub-logo">STYLE</h2>
+                <div class="logo-glow"></div>
+            </div>
+            
+            <div class="main-menu">
+                <button class="menu-btn game-start-btn" onclick="showSongSelect()">
+                    <span class="btn-text">GAME START</span>
+                    <div class="btn-glow"></div>
+                </button>
+                
+                <button class="menu-btn" onclick="showUploadMode()">
+                    <span class="btn-text">UPLOAD MUSIC</span>
+                    <div class="btn-glow"></div>
+                </button>
+                
+                <button class="menu-btn" onclick="showOptions()">
+                    <span class="btn-text">OPTIONS</span>
+                    <div class="btn-glow"></div>
+                </button>
+            </div>
+            
+            <div class="version-info">
+                <div class="version">Version 1.0</div>
+                <div class="credits">Web Audio Game Engine</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 楽曲選択画面 -->
+    <div id="songSelectPage" class="screen">
+        <div class="song-select-container">
+            <div class="page-header">
+                <h2 class="page-title">SELECT MUSIC</h2>
+                <button class="back-btn" onclick="showTopPage()">← BACK</button>
+            </div>
+            
+            <div class="song-select-content">
+                <div class="song-list-section">
+                    <div class="song-list" id="songList">
+                        <!-- 楽曲リストはJavaScriptで動的生成 -->
+                    </div>
+                </div>
+                
+                <div class="song-info-section">
+                    <div class="song-details" id="songDetails">
+                        <div class="song-title" id="selectedSongTitle">楽曲を選択してください</div>
+                        <div class="song-artist" id="selectedSongArtist"></div>
+                        <div class="song-info" id="selectedSongInfo"></div>
+                        <div class="song-description" id="selectedSongDescription"></div>
+                    </div>
+                    
+                    <div class="difficulty-select">
+                        <div class="difficulty-title">DIFFICULTY</div>
+                        <div class="difficulty-buttons" id="difficultyButtons">
+                            <button class="diff-btn easy active" data-difficulty="easy">
+                                <div class="diff-name">EASY</div>
+                                <div class="diff-level" id="easyLevel">1</div>
+                            </button>
+                            <button class="diff-btn normal" data-difficulty="normal">
+                                <div class="diff-name">NORMAL</div>
+                                <div class="diff-level" id="normalLevel">5</div>
+                            </button>
+                            <button class="diff-btn hard" data-difficulty="hard">
+                                <div class="diff-name">HARD</div>
+                                <div class="diff-level" id="hardLevel">9</div>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button class="start-game-btn" id="startGameBtn" onclick="startSelectedSong()" disabled>
+                        START GAME
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ゲーム画面（既存） -->
+    <div id="gamePage" class="screen">
+        <div class="game-container">
+            <div class="game-header">
+                <div class="song-info-bar">
+                    <div class="current-song" id="currentSongDisplay"></div>
+                    <div class="current-difficulty" id="currentDifficultyDisplay"></div>
+                </div>
+                <div class="score-area">
+                    <div class="score">Score: <span id="score">0</span></div>
+                    <div class="combo">Combo: <span id="combo">0</span></div>
+                </div>
+            </div>
+            
+            <canvas id="gameCanvas" width="900" height="500"></canvas>
+            
+            <div class="judgment" id="judgment"></div>
+            
+            <div class="game-controls">
+                <button id="pauseBtn" disabled>PAUSE</button>
+                <button id="quitBtn" onclick="quitToSongSelect()">QUIT</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- アップロードモード -->
+    <div id="uploadPage" class="screen">
+        <div class="upload-container">
+            <div class="page-header">
+                <h2 class="page-title">UPLOAD MUSIC</h2>
+                <button class="back-btn" onclick="showTopPage()">← BACK</button>
+            </div>
+            
+            <div class="upload-content">
+                <div class="upload-section">
+                    <label for="audioUpload" class="upload-label">MP3ファイルを選択</label>
+                    <input type="file" id="audioUpload" accept="audio/mp3,audio/mpeg" style="display: none;">
+                    <div class="upload-status" id="uploadStatus">ファイルが選択されていません</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 設定画面 -->
+    <div id="optionsPage" class="screen">
+        <div class="options-container">
+            <div class="page-header">
+                <h2 class="page-title">OPTIONS</h2>
+                <button class="back-btn" onclick="showTopPage()">← BACK</button>
+            </div>
+            
+            <div class="options-content">
+                <div class="option-item">
+                    <label>判定タイミング調整</label>
+                    <input type="range" id="timingOffset" min="-100" max="100" value="0">
+                    <span id="timingValue">0ms</span>
+                </div>
+                
+                <div class="option-item">
+                    <label>ノーツスピード</label>
+                    <input type="range" id="noteSpeed" min="100" max="500" value="200">
+                    <span id="speedValue">200</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="songs.js"></script>
+    <script src="game.js"></script>
+    <script src="game_new.js"></script>
+</body>
+</html>
