@@ -20,17 +20,38 @@ function showScreen(screenId) {
 }
 
 // トップページから楽曲選択画面へ
-function showSongSelect() {
-    // アップロードした楽曲があるかチェック
+async function showSongSelect() {
+    // クラウドから最新楽曲を取得
+    await fetchSharedSongsFromAPI();
+    
+    // 楽曲があるかチェック
     const songs = getAllSongs();
     if (songs.length > 0) {
         // 楽曲選択画面を表示
         showScreen('songSelectPage');
         loadSongList();
     } else {
-        // アップロードした楽曲がない場合、アップロード画面へ
+        // 楽曲がない場合、アップロードサイトへの誘導
         showScreen('uploadPage');
-        alert('まずMP3ファイルをアップロードしてください。');
+        
+        // より親切なメッセージと誘導
+        const uploadMessage = `
+🎵 楽曲が見つかりませんでした
+
+以下の方法で楽曲を追加できます：
+
+1. 専用アップロードサイトを使用:
+   https://uploud-site.vercel.app/
+
+2. このページの「UPLOAD MUSIC」ボタンから
+   MP3ファイルを直接アップロード
+
+アップロード後、自動的に他のデバイスでも
+楽曲が利用できるようになります。
+        `;
+        
+        // カスタム通知を表示
+        showDetailedNotification(uploadMessage);
     }
 }
 
@@ -990,30 +1011,133 @@ function importSongData() {
     input.click();
 }
 
-// 共有楽曲を読み込み（アップロードサイトとの連携）
-function loadSharedSongs() {
+// 共有楽曲を読み込み（クロスドメイン API連携）
+async function loadSharedSongs() {
     try {
-        const sharedSongs = JSON.parse(localStorage.getItem('sharedSongs') || '[]');
-        let loadedCount = 0;
+        // ローカルストレージから読み込み（従来の方法）
+        const localSharedSongs = JSON.parse(localStorage.getItem('sharedSongs') || '[]');
+        let localLoadedCount = 0;
         
-        sharedSongs.forEach(songData => {
-            // 既存楽曲との重複チェック
+        localSharedSongs.forEach(songData => {
             const existingSong = getSongById(songData.id);
             if (!existingSong) {
                 addSong(songData);
-                loadedCount++;
+                localLoadedCount++;
             }
         });
         
-        if (loadedCount > 0) {
-            console.log(`🎵 アップロードサイトから ${loadedCount}曲を読み込みました`);
+        if (localLoadedCount > 0) {
+            console.log(`🎵 ローカルストレージから ${localLoadedCount}曲を読み込みました`);
+            localStorage.removeItem('sharedSongs');
         }
         
-        // 読み込み後はクリア（重複防止）
-        localStorage.removeItem('sharedSongs');
+        // 共有APIから楽曲を取得
+        await fetchSharedSongsFromAPI();
         
     } catch (error) {
         console.error('共有楽曲読み込みエラー:', error);
+    }
+}
+
+// クラウドから共有楽曲を取得
+async function fetchSharedSongsFromAPI() {
+    try {
+        await fetchFromJSONStorageAPI();
+    } catch (error) {
+        console.warn('クラウド楽曲取得エラー（ローカルのみ動作）:', error.message);
+    }
+}
+
+// JSON Storage APIから楽曲を取得
+async function fetchFromJSONStorageAPI() {
+    const API_URL = 'https://api.jsonstorage.net/v1/json/beatmania-shared-songs';
+    
+    try {
+        const response = await fetch(API_URL, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`JSON Storage API Error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        let apiLoadedCount = 0;
+        
+        if (data.songs && Array.isArray(data.songs)) {
+            // 最後同期時刻をチェック（増分同期）
+            const lastSync = localStorage.getItem('lastSyncTime');
+            const songsToLoad = lastSync 
+                ? data.songs.filter(song => new Date(song.uploadedAt) > new Date(lastSync))
+                : data.songs;
+            
+            songsToLoad.forEach(songData => {
+                const existingSong = getSongById(songData.id);
+                if (!existingSong) {
+                    addSong(songData);
+                    apiLoadedCount++;
+                }
+            });
+            
+            if (apiLoadedCount > 0) {
+                console.log(`🌐 クラウドから ${apiLoadedCount}曲を読み込みました`);
+                showNotification(`🎵 ${apiLoadedCount}曲の新しい楽曲を同期しました`);
+                
+                // 楽曲選択画面を更新
+                if (currentScreen === 'songSelectPage') {
+                    loadSongList();
+                }
+            }
+            
+            // 最後同期時刻を更新
+            localStorage.setItem('lastSyncTime', data.lastUpdated || new Date().toISOString());
+            
+            console.log(`📊 クラウドの総楽曲数: ${data.songs.length}曲`);
+        }
+        
+    } catch (error) {
+        console.warn('JSON Storage API取得エラー:', error.message);
+        // フォールバック: 代替クラウドサービス
+        await fetchFromFallbackCloud();
+    }
+}
+
+// フォールバック: 代替クラウドサービスから取得
+async function fetchFromFallbackCloud() {
+    try {
+        // GitHub Pages 静的JSON（読み取り専用）
+        const FALLBACK_URL = 'https://beatmania-community.github.io/shared-songs/songs.json';
+        
+        const response = await fetch(FALLBACK_URL, {
+            method: 'GET',
+            cache: 'no-cache'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            let fallbackLoadedCount = 0;
+            
+            if (data.songs && Array.isArray(data.songs)) {
+                data.songs.forEach(songData => {
+                    const existingSong = getSongById(songData.id);
+                    if (!existingSong) {
+                        addSong(songData);
+                        fallbackLoadedCount++;
+                    }
+                });
+                
+                if (fallbackLoadedCount > 0) {
+                    console.log(`🔄 フォールバックから ${fallbackLoadedCount}曲を読み込みました`);
+                    showNotification(`📥 ${fallbackLoadedCount}曲をフォールバックから同期`);
+                }
+            }
+        }
+        
+    } catch (error) {
+        console.log('フォールバックも利用できません:', error.message);
     }
 }
 
@@ -1071,16 +1195,70 @@ function showNotification(message) {
     }, 3000);
 }
 
-// 初期化処理
-function initializeApp() {
+// 詳細通知表示（長いメッセージ用）
+function showDetailedNotification(message) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 20, 60, 0.95);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        border: 3px solid #0088ff;
+        box-shadow: 0 0 30px rgba(0, 136, 255, 0.7);
+        font-family: monospace;
+        font-size: 14px;
+        line-height: 1.5;
+        white-space: pre-line;
+        max-width: 500px;
+        z-index: 10000;
+        animation: fadeIn 0.5s ease-out;
+    `;
+    notification.innerHTML = message + '<br><br><small>クリックして閉じる</small>';
+    
+    // クリックで閉じる
+    notification.addEventListener('click', () => {
+        notification.style.animation = 'fadeOut 0.3s ease-in';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 300);
+    });
+    
+    document.body.appendChild(notification);
+    
+    // 10秒後に自動削除
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.style.animation = 'fadeOut 0.5s ease-in';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 500);
+        }
+    }, 10000);
+}
+
+// 初期化処理（非同期対応）
+async function initializeApp() {
     // 保存された楽曲データを読み込み
     loadSongsFromStorage();
     
     // 共有楽曲を読み込み（アップロードサイト連携）
-    loadSharedSongs();
+    await loadSharedSongs();
     
     // クロスサイト通信を設定
     setupCrossSiteMessaging();
+    
+    // 定期的な同期を設定（30秒間隔で新楽曲をチェック）
+    setInterval(async () => {
+        await fetchSharedSongsFromAPI();
+    }, 30 * 1000);
     
     // 最初はトップページを表示
     showScreen('topPage');
@@ -1089,11 +1267,13 @@ function initializeApp() {
     console.log('利用可能な楽曲:', getAllSongs());
     console.log('楽曲追加は addCustomSong() 関数を使用してください。');
     console.log('楽曲共有: exportSongData() でエクスポート、importSongData() でインポート');
-    console.log('🌐 アップロードサイト: upload-site.html');
+    console.log('🌐 アップロードサイト: https://uploud-site.vercel.app/');
+    console.log('🎮 ゲームサイト: https://musicgame-jet.vercel.app/');
     
     // 保存された楽曲があることを通知
     if (SONG_DATABASE.length > 0) {
         console.log(`${SONG_DATABASE.length}曲の保存された楽曲があります`);
+        showNotification(`💿 ${SONG_DATABASE.length}曲読み込み完了`);
     }
 }
 

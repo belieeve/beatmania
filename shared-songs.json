@@ -1,0 +1,27 @@
+{
+  "songs": [
+    {
+      "id": "demo_song_1",
+      "title": "Sample Beat",
+      "artist": "Demo Artist",
+      "genre": "Electronic",
+      "bpm": 128,
+      "duration": 180,
+      "difficulty": {
+        "easy": { "level": 2, "notes": 96 },
+        "normal": { "level": 5, "notes": 192 },
+        "hard": { "level": 8, "notes": 288 }
+      },
+      "description": "デモンストレーション用サンプル楽曲",
+      "colorTheme": {
+        "primary": "#00ffff",
+        "secondary": "#0088cc",
+        "accent": "#44aaff"
+      },
+      "uploadedAt": "2025-01-01T00:00:00.000Z"
+    }
+  ],
+  "lastUpdated": "2025-01-01T00:00:00.000Z",
+  "totalSongs": 1,
+  "version": "1.0"
+}
