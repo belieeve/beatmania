@@ -152,6 +152,15 @@
                     <input type="range" id="noteSpeed" min="100" max="500" value="200">
                     <span id="speedValue">200</span>
                 </div>
+                
+                <div class="option-item">
+                    <label>楽曲データ共有</label>
+                    <div class="share-buttons">
+                        <button class="share-btn export-btn" onclick="exportSongData()">楽曲リストをエクスポート</button>
+                        <button class="share-btn import-btn" onclick="importSongData()">楽曲リストをインポート</button>
+                    </div>
+                    <div class="share-description">楽曲データ（タイトル・BPM・難易度）を他の人と共有できます</div>
+                </div>
             </div>
         </div>
     </div>

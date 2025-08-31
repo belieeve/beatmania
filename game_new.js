@@ -917,6 +917,79 @@ function addCustomSong(songData) {
     return success;
 }
 
+// 楽曲データをエクスポート（他の人と共有用）
+function exportSongData() {
+    const exportData = {
+        songs: getAllSongs().map(song => ({
+            id: song.id,
+            title: song.title,
+            artist: song.artist,
+            genre: song.genre,
+            bpm: song.bpm,
+            duration: song.duration,
+            difficulty: song.difficulty,
+            description: song.description,
+            colorTheme: song.colorTheme,
+            // audioDataは著作権の問題で除外
+        })),
+        exportedAt: new Date().toISOString(),
+        version: '1.0'
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = 'beatmania-songs.json';
+    link.click();
+    
+    console.log('楽曲データをエクスポートしました');
+}
+
+// 楽曲データをインポート（他の人からの共有を受け取り）
+function importSongData() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        
+        try {
+            const text = await file.text();
+            const importData = JSON.parse(text);
+            
+            if (!importData.songs || !Array.isArray(importData.songs)) {
+                throw new Error('無効なファイル形式です');
+            }
+            
+            let importedCount = 0;
+            importData.songs.forEach(songData => {
+                // 既存の楽曲と重複チェック
+                const existingSong = getSongById(songData.id);
+                if (!existingSong) {
+                    addSong(songData);
+                    importedCount++;
+                }
+            });
+            
+            alert(`${importedCount}曲をインポートしました！\n※音声ファイルは含まれていないため、各楽曲を個別にアップロードしてください。`);
+            
+            if (currentScreen === 'songSelectPage') {
+                loadSongList();
+            }
+            
+        } catch (error) {
+            console.error('インポートエラー:', error);
+            alert('ファイルの読み込みに失敗しました。');
+        }
+    };
+    
+    input.click();
+}
+
 // 初期化処理
 function initializeApp() {
     // 保存された楽曲データを読み込み
@@ -928,6 +1001,7 @@ function initializeApp() {
     // 楽曲データベースをコンソールに出力（開発者用）
     console.log('利用可能な楽曲:', getAllSongs());
     console.log('楽曲追加は addCustomSong() 関数を使用してください。');
+    console.log('楽曲共有: exportSongData() でエクスポート、importSongData() でインポート');
     
     // 保存された楽曲があることを通知
     if (SONG_DATABASE.length > 0) {

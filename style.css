@@ -602,6 +602,55 @@ body {
     font-weight: bold;
 }
 
+.share-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin: 15px 0;
+}
+
+.share-btn {
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 2px solid;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.export-btn {
+    background: linear-gradient(135deg, #00aa00, #006600);
+    border-color: #00ff00;
+    color: white;
+}
+
+.export-btn:hover {
+    background: linear-gradient(135deg, #00cc00, #00aa00);
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.5);
+    transform: scale(1.05);
+}
+
+.import-btn {
+    background: linear-gradient(135deg, #0066cc, #004499);
+    border-color: #0088ff;
+    color: white;
+}
+
+.import-btn:hover {
+    background: linear-gradient(135deg, #0088ff, #0066cc);
+    box-shadow: 0 0 15px rgba(0, 136, 255, 0.5);
+    transform: scale(1.05);
+}
+
+.share-description {
+    font-size: 0.9rem;
+    color: #aaaaaa;
+    text-align: center;
+    margin-top: 10px;
+    line-height: 1.4;
+}
+
 /* スクロールバーのスタイリング */
 ::-webkit-scrollbar {
     width: 12px;
