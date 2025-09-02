@@ -1128,9 +1128,9 @@ async function fetchSharedSongsFromAPI() {
     }
 }
 
-// JSON Storage APIから楽曲を取得（JSONStorage.net使用）
+// アップロードサイトのAPIから楽曲を取得
 async function fetchFromJSONStorageAPI() {
-    const API_URL = 'https://api.jsonstorage.net/v1/json/beatmania-shared-songs-v2';
+    const API_URL = 'https://beatmania-upload-vercel-app-jwqy.vercel.app/api/songs';
     
     try {
         console.log('🌐 クラウドから楽曲データを取得中...');
@@ -1152,8 +1152,8 @@ async function fetchFromJSONStorageAPI() {
         const data = await response.json();
         let apiLoadedCount = 0;
         
-        // JSONStorage.net のレスポンス構造に対応
-        const songs = data.songs || [];
+        // サーバーAPIのレスポンス構造に対応
+        const songs = Array.isArray(data) ? data : data.songs || [];
         const metadata = data;
         
         if (Array.isArray(songs)) {
