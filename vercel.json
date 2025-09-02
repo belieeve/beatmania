@@ -93,7 +93,7 @@
   "rewrites": [
     {
       "source": "/audio/(.*)",
-      "destination": "/public/audio/$1"
+      "destination": "/audio/$1"
     }
   ]
 }
