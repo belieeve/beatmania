@@ -1,0 +1,41 @@
+{
+  "name": "beatmania-style-game",
+  "version": "1.0.0",
+  "description": "BEATMANIA style rhythm game with auto song detection",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python3 -m http.server 8080",
+    "build": "echo 'Static files ready for deployment'",
+    "start": "echo 'Vercel handles static files automatically'",
+    "preview": "python3 -m http.server 3000"
+  },
+  "keywords": [
+    "beatmania", 
+    "rhythm-game", 
+    "music-game", 
+    "web-audio-api",
+    "javascript-game"
+  ],
+  "author": "BEATMANIA Style Developer",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/beatmania-style-game"
+  },
+  "engines": {
+    "node": ">=18.x"
+  },
+  "files": [
+    "index.html",
+    "game_new.js",
+    "auto-song-loader.js", 
+    "songs.js",
+    "style.css",
+    "style_new.css",
+    "shared-songs.json",
+    "upload-site.html",
+    "public/",
+    "api/",
+    "vercel.json"
+  ]
+}

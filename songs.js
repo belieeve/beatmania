@@ -73,6 +73,7 @@ function addSong(songData) {
         audioFile: null,
         audioBuffer: null,
         chartData: null,
+        isUploaded: true,
         description: '',
         colorTheme: {
             primary: '#00ffff',

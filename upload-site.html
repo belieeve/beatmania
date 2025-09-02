@@ -227,6 +227,9 @@
                 const bpm = estimateBPM() || 120;
                 const duration = Math.floor(audioBuffer.duration);
                 
+                // 音声ファイルをBase64エンコード
+                const audioBase64 = await arrayBufferToBase64(arrayBuffer);
+                
                 // 楽曲データを作成
                 const songData = {
                     id: `uploaded_${Date.now()}`,
@@ -246,6 +249,7 @@
                         secondary: '#0088cc',
                         accent: '#44aaff'
                     },
+                    audioData: audioBase64,
                     uploadedAt: new Date().toISOString()
                 };
                 
@@ -528,6 +532,19 @@
             document.getElementById('submitBtn').disabled = false;
             selectedFile = null;
             updateStatus('新しい楽曲をアップロードできます', 'success');
+        }
+        
+        // ArrayBufferをBase64に変換
+        async function arrayBufferToBase64(arrayBuffer) {
+            return new Promise((resolve) => {
+                const blob = new Blob([arrayBuffer]);
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.readAsDataURL(blob);
+            });
         }
         
         // 初期化

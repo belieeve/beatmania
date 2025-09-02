@@ -129,6 +129,13 @@ function selectSong(songId) {
         updateSongDetails(selectedSong);
         updateDifficultyButtons(selectedSong);
         
+        // 楽曲の音声データを事前読み込み
+        if (selectedSong.audioFile && !selectedSong.audioBuffer) {
+            loadStaticAudioFile(selectedSong);
+        } else if (selectedSong.isUploaded && selectedSong.audioData && !selectedSong.audioBuffer) {
+            loadSongAudioData(selectedSong);
+        }
+        
         // スタートボタンを有効にする
         const startBtn = document.getElementById('startGameBtn');
         startBtn.disabled = false;
@@ -338,10 +345,21 @@ function startSimpleGame(song, difficulty) {
 // アップロードされた音楽を再生
 async function startUploadedMusic(song) {
     try {
-        console.log('アップロード音楽再生開始:', song.title);
+        console.log('音楽再生開始:', song.title);
         
         // 既存の音楽を停止
         stopCurrentMusic();
+        
+        // 静的ファイルから音声を読み込み
+        if (song.audioFile && !song.audioBuffer) {
+            console.log('静的音声ファイルを読み込み中:', song.audioFile);
+            await loadStaticAudioFile(song);
+        }
+        // フォールバック: Base64データから読み込み
+        else if (!song.audioBuffer && song.audioData) {
+            console.log('音声データを読み込み中...');
+            await loadSongAudioData(song);
+        }
         
         if (song.audioBuffer) {
             // アップロードされたオーディオバッファを使用
@@ -366,12 +384,51 @@ async function startUploadedMusic(song) {
         } else {
             console.log('オーディオバッファが見つかりません。代替音楽を使用します。');
             // フォールバック：シンプルな音楽を生成
-            startMusic(song);
+            playTestBeep(audioContext);
         }
         
     } catch (error) {
         console.error('アップロード音楽再生エラー:', error);
         console.log('音楽なしでゲームを続行します');
+    }
+}
+
+// 静的音声ファイルを読み込む
+async function loadStaticAudioFile(song) {
+    try {
+        const audioUrl = `./audio/${song.audioFile}`;
+        console.log('Loading static audio file:', audioUrl);
+        
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        const response = await fetch(audioUrl);
+        if (!response.ok) {
+            throw new Error(`Failed to load audio file: ${response.status}`);
+        }
+        
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        
+        song.audioBuffer = audioBuffer;
+        console.log('静的音声ファイル読み込み完了:', song.title, audioBuffer.duration + 's');
+        
+    } catch (error) {
+        console.error('静的音声ファイル読み込みエラー:', error);
+        console.log('フォールバック: プロシージャル音楽を使用します');
+    }
+}
+
+// 楽曲の音声データを読み込む（Base64フォールバック）
+async function loadSongAudioData(song) {
+    try {
+        if (song.audioData) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const audioBuffer = await base64ToAudioBuffer(song.audioData, audioContext);
+            song.audioBuffer = audioBuffer;
+            console.log('Base64データから音声を復元しました:', song.title);
+        }
+    } catch (error) {
+        console.error('音声データ読み込みエラー:', error);
     }
 }
 
@@ -1246,6 +1303,8 @@ function showDetailedNotification(message) {
 
 // 初期化処理（非同期対応）
 async function initializeApp() {
+    console.log('🎮 BEATMANIA STYLE アプリ初期化開始');
+    
     // 保存された楽曲データを読み込み
     loadSongsFromStorage();
     
@@ -1254,6 +1313,12 @@ async function initializeApp() {
     
     // クロスサイト通信を設定
     setupCrossSiteMessaging();
+    
+    // 自動楽曲検出システムを開始
+    if (typeof startAutoSongDiscovery === 'function') {
+        console.log('🤖 自動楽曲検出システム開始');
+        setTimeout(startAutoSongDiscovery, 2000); // 2秒後に開始
+    }
     
     // 定期的な同期を設定（30秒間隔で新楽曲をチェック）
     setInterval(async () => {

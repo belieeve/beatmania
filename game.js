@@ -53,6 +53,7 @@ class BeatmaniaGame {
         };
         
         this.generateCharts();
+        this.loadUploadedSongs();
         this.init();
     }
     
@@ -74,6 +75,108 @@ class BeatmaniaGame {
         this.drawKeyboards();
         
         console.log('Game initialization complete');
+    }
+    
+    showResultDialog(score, maxCombo, accuracy) {
+        // 結果ダイアログHTML
+        const dialogHTML = `
+            <div id="resultDialog" style="
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+                font-family: Arial, sans-serif;
+            ">
+                <div style="
+                    background: linear-gradient(135deg, #1a1a2e, #16213e);
+                    border: 3px solid #0088ff;
+                    border-radius: 20px;
+                    padding: 40px;
+                    text-align: center;
+                    color: white;
+                    max-width: 500px;
+                    width: 90%;
+                    box-shadow: 0 0 50px rgba(0, 136, 255, 0.5);
+                ">
+                    <h2 style="
+                        color: #00ffff;
+                        font-size: 2.5rem;
+                        margin-bottom: 30px;
+                        text-shadow: 0 0 20px #00ffff;
+                    ">SONG COMPLETE!</h2>
+                    
+                    <div style="margin-bottom: 30px; font-size: 1.3rem; line-height: 1.8;">
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #ffaa00;">Score:</strong> 
+                            <span style="color: #00ffff; font-size: 1.5em;">${score.toLocaleString()}</span>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #ffaa00;">Max Combo:</strong> 
+                            <span style="color: #00ffff; font-size: 1.5em;">${maxCombo}</span>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <strong style="color: #ffaa00;">Accuracy:</strong> 
+                            <span style="color: #00ffff; font-size: 1.5em;">${accuracy}%</span>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 20px; justify-content: center;">
+                        <button onclick="game.closeResultDialog(); game.showSongSelect();" style="
+                            padding: 15px 30px;
+                            background: linear-gradient(135deg, #0066cc, #004499);
+                            border: 3px solid #0088ff;
+                            border-radius: 10px;
+                            color: white;
+                            font-size: 1.2rem;
+                            font-weight: bold;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                        " onmouseover="this.style.background='linear-gradient(135deg, #0088ff, #0066cc)'; this.style.boxShadow='0 0 20px rgba(0, 136, 255, 0.6)'; this.style.transform='scale(1.05)';" onmouseout="this.style.background='linear-gradient(135deg, #0066cc, #004499)'; this.style.boxShadow='none'; this.style.transform='scale(1)';">
+                            ← SELECT MUSIC
+                        </button>
+                        
+                        <button onclick="game.closeResultDialog(); game.startGame();" style="
+                            padding: 15px 30px;
+                            background: linear-gradient(135deg, #ff6600, #cc4400);
+                            border: 3px solid #ff8800;
+                            border-radius: 10px;
+                            color: white;
+                            font-size: 1.2rem;
+                            font-weight: bold;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                        " onmouseover="this.style.background='linear-gradient(135deg, #ff8800, #ff6600)'; this.style.boxShadow='0 0 20px rgba(255, 136, 0, 0.6)'; this.style.transform='scale(1.05)';" onmouseout="this.style.background='linear-gradient(135deg, #ff6600, #cc4400)'; this.style.boxShadow='none'; this.style.transform='scale(1)';">
+                            RETRY ↻
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', dialogHTML);
+    }
+    
+    closeResultDialog() {
+        const dialog = document.getElementById('resultDialog');
+        if (dialog) {
+            dialog.remove();
+        }
+    }
+    
+    showSongSelect() {
+        // 楽曲選択画面に戻る処理
+        if (typeof showSongSelect === 'function') {
+            showSongSelect();
+        } else {
+            // フォールバック: ページリロード
+            location.reload();
+        }
     }
     
     setupEventListeners() {
@@ -127,7 +230,7 @@ class BeatmaniaGame {
         document.querySelector(`[data-level="${level}"]`).classList.add('active');
     }
     
-    selectSong(songIndex) {
+    async selectSong(songIndex) {
         console.log('Selecting song:', songIndex);
         this.currentSongIndex = songIndex;
         
@@ -145,13 +248,148 @@ class BeatmaniaGame {
             this.generateCharts(); // デフォルト譜面
         } else {
             // アップロードされた曲
+            await this.loadUploadedSongAudio(songIndex);
             const song = this.uploadedSongs[songIndex];
-            this.uploadedAudio = song.audioBuffer;
             this.currentBPM = song.bpm;
             this.charts = { ...song.charts };
         }
         
         console.log(`Selected: ${songIndex === -1 ? 'Sample Song' : this.uploadedSongs[songIndex].name}`);
+    }
+    
+    async loadUploadedSongAudio(songIndex) {
+        try {
+            const song = this.uploadedSongs[songIndex];
+            if (!song) {
+                console.error('Song not found at index:', songIndex);
+                return;
+            }
+            
+            console.log('Loading uploaded song audio for:', song.name, 'ID:', song.id);
+            
+            // 共有楽曲データから音声データを取得
+            const audioData = await this.fetchUploadedSongAudio(song.id);
+            if (audioData) {
+                // Base64からArrayBufferに変換
+                const arrayBuffer = this.base64ToArrayBuffer(audioData);
+                if (arrayBuffer) {
+                    // AudioBufferに変換
+                    this.uploadedAudio = await this.audioContext.decodeAudioData(arrayBuffer);
+                    console.log('Uploaded song audio loaded successfully, duration:', this.uploadedAudio.duration);
+                } else {
+                    console.error('Failed to convert base64 to ArrayBuffer');
+                    this.uploadedAudio = null;
+                }
+            } else {
+                console.warn('Audio data not found for uploaded song');
+                this.uploadedAudio = null;
+            }
+        } catch (error) {
+            console.error('Failed to load uploaded song audio:', error);
+            this.uploadedAudio = null;
+        }
+    }
+    
+    async fetchUploadedSongAudio(songId) {
+        console.log('Fetching uploaded song audio for ID:', songId);
+        
+        // ローカルストレージから楽曲データを取得
+        const sharedSongs = JSON.parse(localStorage.getItem('sharedSongs') || '[]');
+        console.log('Shared songs from localStorage:', sharedSongs.length);
+        
+        const song = sharedSongs.find(s => s.id === songId);
+        
+        if (song && song.audioData) {
+            console.log('Found audio data in localStorage for song:', song.title);
+            return song.audioData;
+        } else {
+            console.warn('No audio data found in localStorage for song ID:', songId);
+        }
+        
+        // 外部APIから取得する場合の処理も追加可能
+        try {
+            const response = await fetch('./shared-songs.json');
+            const data = await response.json();
+            const foundSong = data.songs.find(s => s.id === songId);
+            if (foundSong && foundSong.audioData) {
+                console.log('Found audio data in shared-songs.json for song:', foundSong.title);
+                return foundSong.audioData;
+            }
+        } catch (error) {
+            console.warn('Failed to fetch from shared-songs.json:', error);
+        }
+        
+        console.warn('No audio data found for song ID:', songId);
+        return null;
+    }
+    
+    base64ToArrayBuffer(base64) {
+        try {
+            console.log('Converting base64 to ArrayBuffer, length:', base64.length);
+            const binaryString = window.atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            console.log('ArrayBuffer created successfully, size:', bytes.buffer.byteLength);
+            return bytes.buffer;
+        } catch (error) {
+            console.error('Failed to convert base64 to ArrayBuffer:', error);
+            return null;
+        }
+    }
+    
+    loadUploadedSongs() {
+        try {
+            const sharedSongs = JSON.parse(localStorage.getItem('sharedSongs') || '[]');
+            console.log('Loading uploaded songs from localStorage:', sharedSongs.length);
+            
+            sharedSongs.forEach(songData => {
+                // 楽曲データをゲームの形式に変換
+                const gameSong = {
+                    id: songData.id,
+                    name: songData.title,
+                    artist: songData.artist,
+                    bpm: songData.bpm,
+                    duration: songData.duration,
+                    charts: this.generateChartsForSong(songData)
+                };
+                
+                this.uploadedSongs.push(gameSong);
+                console.log('Loaded uploaded song:', gameSong.name);
+            });
+            
+        } catch (error) {
+            console.error('Failed to load uploaded songs:', error);
+        }
+    }
+    
+    generateChartsForSong(songData) {
+        const bpm = songData.bpm || 120;
+        const duration = songData.duration || 180;
+        const beatInterval = (60 / bpm) * 1000;
+        const totalBeats = (duration * 1000) / beatInterval;
+        
+        return {
+            easy: this.generateChart(totalBeats, 0.3, bpm),
+            normal: this.generateChart(totalBeats, 0.5, bpm),
+            hard: this.generateChart(totalBeats, 0.7, bpm)
+        };
+    }
+    
+    generateChart(totalBeats, density, bpm) {
+        const chart = [];
+        const beatInterval = (60 / bpm) * 1000;
+        
+        for (let beat = 0; beat < totalBeats; beat++) {
+            if (Math.random() < density) {
+                const lane = Math.floor(Math.random() * 6);
+                const timing = beat * beatInterval;
+                chart.push({ lane, timing });
+            }
+        }
+        
+        return chart.sort((a, b) => a.timing - b.timing);
     }
     
     addSongToLibrary(songData) {
@@ -556,25 +794,28 @@ class BeatmaniaGame {
     }
     
     async loadSampleAudio() {
-        const sampleRate = this.audioContext.sampleRate;
-        const duration = 180; // 3分 = 180秒
-        const frameCount = sampleRate * duration;
-        const audioBuffer = this.audioContext.createBuffer(2, frameCount, sampleRate);
-        
-        for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
-            const channelData = audioBuffer.getChannelData(channel);
-            for (let i = 0; i < frameCount; i++) {
-                const t = i / sampleRate;
-                let sample = 0;
-                
-                // メインメロディ (4小節ごとに変化)
-                const measure = Math.floor(t / 2) % 4;
-                const baseFreq = [440, 523, 392, 494][measure];
-                sample += Math.sin(2 * Math.PI * baseFreq * t) * 0.08 * Math.sin(2 * Math.PI * 0.5 * t);
-                
-                // ベースライン
-                const bassFreq = baseFreq / 2;
-                sample += Math.sin(2 * Math.PI * bassFreq * t) * 0.12 * Math.sin(2 * Math.PI * 0.25 * t);
+        try {
+            const sampleRate = this.audioContext.sampleRate;
+            const duration = 180; // 3分 = 180秒
+            const frameCount = sampleRate * duration;
+            const audioBuffer = this.audioContext.createBuffer(2, frameCount, sampleRate);
+            
+            console.log('Creating sample audio buffer:', { sampleRate, duration, frameCount });
+            
+            for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
+                const channelData = audioBuffer.getChannelData(channel);
+                for (let i = 0; i < frameCount; i++) {
+                    const t = i / sampleRate;
+                    let sample = 0;
+                    
+                    // メインメロディ (4小節ごとに変化)
+                    const measure = Math.floor(t / 2) % 4;
+                    const baseFreq = [440, 523, 392, 494][measure];
+                    sample += Math.sin(2 * Math.PI * baseFreq * t) * 0.08 * Math.sin(2 * Math.PI * 0.5 * t);
+                    
+                    // ベースライン
+                    const bassFreq = baseFreq / 2;
+                    sample += Math.sin(2 * Math.PI * bassFreq * t) * 0.12 * Math.sin(2 * Math.PI * 0.25 * t);
                 
                 // ハーモニー
                 sample += Math.sin(2 * Math.PI * (baseFreq * 1.25) * t) * 0.04 * Math.sin(2 * Math.PI * 0.3 * t);
@@ -590,11 +831,15 @@ class BeatmaniaGame {
                     sample += (Math.random() - 0.5) * 0.02 * Math.exp(-((t % 0.25) * 20));
                 }
                 
-                channelData[i] = sample * 0.7; // 全体の音量調整
+                    channelData[i] = sample * 0.7; // 全体の音量調整
+                }
             }
+            
+            this.audioBuffer = audioBuffer;
+            console.log('Sample audio buffer created successfully');
+        } catch (error) {
+            console.error('Failed to create sample audio buffer:', error);
         }
-        
-        this.audioBuffer = audioBuffer;
     }
     
     generateCharts() {
@@ -769,11 +1014,29 @@ class BeatmaniaGame {
     playAudio() {
         const bufferToPlay = this.uploadedAudio || this.audioBuffer;
         
+        console.log('playAudio called:', {
+            uploadedAudio: !!this.uploadedAudio,
+            audioBuffer: !!this.audioBuffer,
+            bufferToPlay: !!bufferToPlay,
+            audioContext: !!this.audioContext,
+            currentSongIndex: this.currentSongIndex
+        });
+        
         if (bufferToPlay && this.audioContext) {
-            this.audioSource = this.audioContext.createBufferSource();
-            this.audioSource.buffer = bufferToPlay;
-            this.audioSource.connect(this.audioContext.destination);
-            this.audioSource.start();
+            try {
+                this.audioSource = this.audioContext.createBufferSource();
+                this.audioSource.buffer = bufferToPlay;
+                this.audioSource.connect(this.audioContext.destination);
+                this.audioSource.start();
+                console.log('Audio playback started successfully');
+            } catch (error) {
+                console.error('Failed to start audio playback:', error);
+            }
+        } else {
+            console.warn('Cannot play audio:', {
+                hasBuffer: !!bufferToPlay,
+                hasAudioContext: !!this.audioContext
+            });
         }
     }
     
@@ -963,7 +1226,7 @@ class BeatmaniaGame {
         this.resetGameState();
         
         setTimeout(() => {
-            alert(`Song Complete!\nScore: ${finalScore.toLocaleString()}\nMax Combo: ${finalMaxCombo}\nAccuracy: ${accuracy}%\n\nGreat job!`);
+            this.showResultDialog(finalScore, finalMaxCombo, accuracy);
         }, 500);
         
         document.getElementById('startBtn').disabled = false;

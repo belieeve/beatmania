@@ -1,6 +1,9 @@
 // Vercel Serverless Function for song data sharing
 // /api/songs.js
 
+// 永続化のためにVercel KVストレージを使用
+// または外部データベースと連携
+
 let sharedSongs = [];
 
 export default function handler(req, res) {
