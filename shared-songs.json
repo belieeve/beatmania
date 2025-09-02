@@ -7,7 +7,7 @@
       "genre": "Electronic",
       "bpm": 128,
       "duration": 180,
-      "audioFile": "Escort.mp3",
+      "audioFile": "/audio/Escort.mp3",
       "difficulty": {
         "easy": { "level": 2, "notes": 120 },
         "normal": { "level": 5, "notes": 240 },
@@ -112,7 +112,7 @@
       "genre": "Electronic",
       "bpm": 140,
       "duration": 185,
-      "audioFile": "hentai-tachi-feat-nemuke.mp3",
+      "audioFile": "/audio/hentai-tachi-feat-nemuke.mp3",
       "difficulty": {
         "easy": { "level": 3, "notes": 160 },
         "normal": { "level": 6, "notes": 320 },
