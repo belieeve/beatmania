@@ -1128,29 +1128,33 @@ async function fetchSharedSongsFromAPI() {
     }
 }
 
-// JSON Storage APIから楽曲を取得（JSONBin.io使用）
+// JSON Storage APIから楽曲を取得（JSONStorage.net使用）
 async function fetchFromJSONStorageAPI() {
-    const API_URL = 'https://api.jsonbin.io/v3/b/67758d6ae41b4d34e459c8a2/latest';
+    const API_URL = 'https://api.jsonstorage.net/v1/json/beatmania-shared-songs-v2';
     
     try {
         console.log('🌐 クラウドから楽曲データを取得中...');
         const response = await fetch(API_URL, {
             method: 'GET',
             headers: {
-                'X-JSON-Path': '$.songs'
+                'Content-Type': 'application/json'
             }
         });
         
         if (!response.ok) {
-            throw new Error(`JSONBin API Error: ${response.status}`);
+            if (response.status === 404) {
+                console.log('🔍 クラウドデータベースが見つかりません（初回起動時は正常）');
+                return;
+            }
+            throw new Error(`JSONStorage API Error: ${response.status}`);
         }
         
         const data = await response.json();
         let apiLoadedCount = 0;
         
-        // JSONBin.io のレスポンス構造に対応
-        const songs = data.record || data.songs || [];
-        const metadata = data.metadata || data;
+        // JSONStorage.net のレスポンス構造に対応
+        const songs = data.songs || [];
+        const metadata = data;
         
         if (Array.isArray(songs)) {
             // 最後同期時刻をチェック（増分同期）

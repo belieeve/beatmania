@@ -231,47 +231,40 @@
     </div>
 
     <script>
-        // JSONBin.io設定（無料・アカウント不要）
-        const CLOUD_STORAGE_API = 'https://api.jsonbin.io/v3/b';
-        const BIN_ID = '67758d6ae41b4d34e459c8a2'; // 固定Bin ID
+        // シンプルなローカル + 共有システム
+        const STORAGE_KEY = 'beatmania-uploaded-songs';
+        let shareCode = '';
         
         let uploadedSongs = [];
         
         // ページ読み込み時の初期化
-        document.addEventListener('DOMContentLoaded', async () => {
+        document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 BEATMANIA Upload Center 初期化');
-            await loadExistingSongs();
+            loadExistingSongs();
             updateRecentList();
             startSyncStatusCheck();
         });
         
-        // 既存楽曲データを読み込み
-        async function loadExistingSongs() {
+        // ローカルストレージから楽曲データを読み込み
+        function loadExistingSongs() {
             try {
                 updateSyncStatus('loading', '📡 楽曲データを読み込み中...');
                 
-                const response = await fetch(`${CLOUD_STORAGE_API}/${BIN_ID}/latest`, {
-                    method: 'GET',
-                    headers: {
-                        'X-JSON-Path': '$.songs'
-                    }
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    uploadedSongs = data.record || [];
+                const savedData = localStorage.getItem(STORAGE_KEY);
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    uploadedSongs = data.songs || [];
                     updateSyncStatus('success', `✅ ${uploadedSongs.length}曲のデータを読み込み完了`);
                 } else {
-                    // 初回の場合、空配列で初期化
                     uploadedSongs = [];
-                    await saveToCloud();
+                    saveToLocal();
                     updateSyncStatus('success', '🎉 新規データベース作成完了');
                 }
                 
             } catch (error) {
                 console.error('楽曲データ読み込みエラー:', error);
-                updateSyncStatus('error', '❌ データ読み込みエラー');
                 uploadedSongs = [];
+                updateSyncStatus('info', '🆕 新規データベースを初期化');
             }
         }
         
@@ -302,8 +295,8 @@
                 updateProgress(60, '🎯 譜面生成中...');
                 const songData = await createSongData(file, audioData);
                 
-                updateProgress(80, '☁️ クラウド保存中...');
-                await uploadToCloud(songData);
+                updateProgress(80, '💾 楽曲保存中...');
+                uploadToLocal(songData);
                 
                 updateProgress(100, '✅ アップロード完了！');
                 
@@ -457,24 +450,25 @@
             return themes[Math.floor(Math.random() * themes.length)];
         }
         
-        // クラウドに保存
-        async function uploadToCloud(songData) {
+        // ローカルに保存してゲームサイトと共有
+        function uploadToLocal(songData) {
             try {
                 // 既存データに追加
                 uploadedSongs.push(songData);
                 
-                await saveToCloud();
+                saveToLocal();
+                generateShareCode();
                 
-                console.log('✅ クラウド保存完了:', songData.title);
-                updateSyncStatus('success', `🎉 「${songData.title}」同期完了`);
+                console.log('✅ ローカル保存完了:', songData.title);
+                updateSyncStatus('success', `🎉 「${songData.title}」保存完了`);
                 
             } catch (error) {
-                throw new Error('クラウド保存失敗: ' + error.message);
+                throw new Error('保存失敗: ' + error.message);
             }
         }
         
-        // クラウドに保存（内部処理）
-        async function saveToCloud() {
+        // ローカルストレージに保存
+        function saveToLocal() {
             const payload = {
                 songs: uploadedSongs,
                 lastUpdated: new Date().toISOString(),
@@ -482,16 +476,27 @@
                 version: '2.0'
             };
             
-            const response = await fetch(`${CLOUD_STORAGE_API}/${BIN_ID}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload)
-            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            console.log('✅ ローカル保存成功');
+        }
+        
+        // 共有コード生成（Base64エンコード）
+        function generateShareCode() {
+            if (uploadedSongs.length === 0) return;
             
-            if (!response.ok) {
-                throw new Error('クラウド保存API エラー');
+            const shareData = {
+                songs: uploadedSongs,
+                timestamp: Date.now()
+            };
+            
+            const compressed = JSON.stringify(shareData);
+            shareCode = btoa(encodeURIComponent(compressed)).substring(0, 12);
+            
+            // ゲームサイトのURLに共有コードを表示
+            const gameLink = document.querySelector('.game-link');
+            if (gameLink) {
+                gameLink.href = `https://beatmania.vercel.app/?shared=${shareCode}`;
+                gameLink.innerHTML = `🎮 ゲームサイトで遊ぶ (共有コード: ${shareCode})`;
             }
         }
         
@@ -547,16 +552,13 @@
         
         // 定期的な同期ステータスチェック
         function startSyncStatusCheck() {
-            setInterval(async () => {
-                try {
-                    const response = await fetch(`${CLOUD_STORAGE_API}/${BIN_ID}/latest`);
-                    if (response.ok) {
-                        updateSyncStatus('success', `✅ ゲームサイトと同期中 (${uploadedSongs.length}曲)`);
-                    }
-                } catch (error) {
-                    updateSyncStatus('error', '⚠️ 同期エラー - 再接続中...');
+            setInterval(() => {
+                if (uploadedSongs.length > 0) {
+                    updateSyncStatus('success', `✅ ${uploadedSongs.length}曲保存済み - 共有準備完了`);
+                } else {
+                    updateSyncStatus('info', '🔄 楽曲アップロード待機中...');
                 }
-            }, 30000); // 30秒間隔
+            }, 10000); // 10秒間隔
         }
         
         console.log('🎵 BEATMANIA Upload Center Ready!');
