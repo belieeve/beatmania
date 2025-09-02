@@ -1071,6 +1071,29 @@ function importSongData() {
 // 共有楽曲を読み込み（クロスドメイン API連携）
 async function loadSharedSongs() {
     try {
+        // shared-songs.jsonから楽曲データを読み込み
+        try {
+            const response = await fetch('./shared-songs.json');
+            if (response.ok) {
+                const data = await response.json();
+                let staticLoadedCount = 0;
+                
+                data.songs.forEach(songData => {
+                    const existingSong = getSongById(songData.id);
+                    if (!existingSong) {
+                        addSong(songData);
+                        staticLoadedCount++;
+                    }
+                });
+                
+                if (staticLoadedCount > 0) {
+                    console.log(`🎵 shared-songs.jsonから ${staticLoadedCount}曲を読み込みました`);
+                }
+            }
+        } catch (error) {
+            console.warn('shared-songs.json読み込みエラー:', error);
+        }
+        
         // ローカルストレージから読み込み（従来の方法）
         const localSharedSongs = JSON.parse(localStorage.getItem('sharedSongs') || '[]');
         let localLoadedCount = 0;
