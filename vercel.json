@@ -1,15 +1,6 @@
 {
   "version": 2,
   "name": "beatmania-style-game",
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "zeroConfig": true
-      }
-    }
-  ],
   "functions": {
     "api/songs.js": {
       "memory": 512,
@@ -18,16 +9,17 @@
   },
   "routes": [
     {
-      "src": "/audio/(.*)",
-      "dest": "/public/audio/$1",
-      "headers": {
-        "Cache-Control": "public, max-age=31536000",
-        "Access-Control-Allow-Origin": "*"
-      }
-    },
-    {
       "src": "/api/(.*)",
       "dest": "/api/$1"
+    },
+    {
+      "src": "/audio/(.*)",
+      "dest": "/audio/$1",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000",
+        "Access-Control-Allow-Origin": "*",
+        "Content-Type": "audio/mpeg"
+      }
     },
     {
       "src": "/(.*\\.(js|css|json|html|png|jpg|jpeg|gif|ico|svg|mp3|wav|ogg))",
@@ -60,23 +52,6 @@
       ]
     },
     {
-      "source": "/audio/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000"
-        },
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Content-Type",
-          "value": "audio/mpeg"
-        }
-      ]
-    },
-    {
       "source": "/(.*\\.(mp3|wav|ogg))",
       "headers": [
         {
@@ -86,14 +61,12 @@
         {
           "key": "Accept-Ranges",
           "value": "bytes"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
         }
       ]
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/audio/(.*)",
-      "destination": "/audio/$1"
     }
   ]
 }
