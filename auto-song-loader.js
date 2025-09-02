@@ -46,6 +46,9 @@ class AutoSongLoader {
             'digital-storm.mp3',
             'matrix-dance.mp3',
             'pixel-perfect.mp3',
+            'Escort.mp3',
+            'hentai-tachi-feat-nemuke.mp3',
+            '3_05の変態たち feat. 眠気.mp3',
             // 追加可能なファイル名パターン
             'song-001.mp3',
             'song-002.mp3',

@@ -104,9 +104,30 @@
         "accent": "#ffaa44"
       },
       "uploadedAt": "2025-01-01T04:00:00.000Z"
+    },
+    {
+      "id": "hentai_tachi_song",
+      "title": "Hentai Tachi Feat Nemuke", 
+      "artist": "Unknown Artist",
+      "genre": "Electronic",
+      "bpm": 140,
+      "duration": 185,
+      "audioFile": "hentai-tachi-feat-nemuke.mp3",
+      "difficulty": {
+        "easy": { "level": 3, "notes": 160 },
+        "normal": { "level": 6, "notes": 320 },
+        "hard": { "level": 9, "notes": 480 }
+      },
+      "description": "アップロードされた楽曲: 3_05の変態たち feat. 眠気",
+      "colorTheme": {
+        "primary": "#ff6b9d",
+        "secondary": "#c44569", 
+        "accent": "#f8b500"
+      },
+      "uploadedAt": "2025-09-02T12:30:00.000Z"
     }
   ],
-  "lastUpdated": "2025-01-01T04:00:00.000Z",
-  "totalSongs": 5,
+  "lastUpdated": "2025-09-02T12:30:00.000Z",
+  "totalSongs": 6,
   "version": "1.0"
 }
