@@ -1128,37 +1128,43 @@ async function fetchSharedSongsFromAPI() {
     }
 }
 
-// JSON Storage APIから楽曲を取得
+// JSON Storage APIから楽曲を取得（JSONBin.io使用）
 async function fetchFromJSONStorageAPI() {
-    const API_URL = 'https://api.jsonstorage.net/v1/json/beatmania-shared-songs';
+    const API_URL = 'https://api.jsonbin.io/v3/b/67758d6ae41b4d34e459c8a2/latest';
     
     try {
+        console.log('🌐 クラウドから楽曲データを取得中...');
         const response = await fetch(API_URL, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json'
+                'X-JSON-Path': '$.songs'
             }
         });
         
         if (!response.ok) {
-            throw new Error(`JSON Storage API Error: ${response.status}`);
+            throw new Error(`JSONBin API Error: ${response.status}`);
         }
         
         const data = await response.json();
         let apiLoadedCount = 0;
         
-        if (data.songs && Array.isArray(data.songs)) {
+        // JSONBin.io のレスポンス構造に対応
+        const songs = data.record || data.songs || [];
+        const metadata = data.metadata || data;
+        
+        if (Array.isArray(songs)) {
             // 最後同期時刻をチェック（増分同期）
             const lastSync = localStorage.getItem('lastSyncTime');
             const songsToLoad = lastSync 
-                ? data.songs.filter(song => new Date(song.uploadedAt) > new Date(lastSync))
-                : data.songs;
+                ? songs.filter(song => new Date(song.uploadedAt) > new Date(lastSync))
+                : songs;
             
             songsToLoad.forEach(songData => {
                 const existingSong = getSongById(songData.id);
                 if (!existingSong) {
                     addSong(songData);
                     apiLoadedCount++;
+                    console.log(`🆕 新楽曲追加: ${songData.title}`);
                 }
             });
             
@@ -1170,12 +1176,14 @@ async function fetchFromJSONStorageAPI() {
                 if (currentScreen === 'songSelectPage') {
                     loadSongList();
                 }
+            } else {
+                console.log('🔄 クラウドデータは最新です');
             }
             
             // 最後同期時刻を更新
-            localStorage.setItem('lastSyncTime', data.lastUpdated || new Date().toISOString());
+            localStorage.setItem('lastSyncTime', metadata.lastUpdated || new Date().toISOString());
             
-            console.log(`📊 クラウドの総楽曲数: ${data.songs.length}曲`);
+            console.log(`📊 クラウドの総楽曲数: ${songs.length}曲`);
         }
         
     } catch (error) {
@@ -1343,10 +1351,11 @@ async function initializeApp() {
         setTimeout(startAutoSongDiscovery, 2000); // 2秒後に開始
     }
     
-    // 定期的な同期を設定（30秒間隔で新楽曲をチェック）
+    // 定期的な同期を設定（10秒間隔で新楽曲をチェック）
     setInterval(async () => {
+        console.log('🔄 クラウド同期チェック...');
         await fetchSharedSongsFromAPI();
-    }, 30 * 1000);
+    }, 10 * 1000);
     
     // 最初はトップページを表示
     showScreen('topPage');
