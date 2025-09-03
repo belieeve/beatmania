@@ -1,8 +1,11 @@
 {
   "version": 2,
   "name": "beatmania-upload",
-  "buildCommand": "npm run build",
-  "framework": "nextjs",
+  "functions": {
+    "api/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
   "headers": [
     {
       "source": "/api/(.*)",
@@ -13,7 +16,7 @@
         },
         {
           "key": "Access-Control-Allow-Methods", 
-          "value": "GET, PUT, POST, OPTIONS"
+          "value": "GET, PUT, OPTIONS"
         },
         {
           "key": "Access-Control-Allow-Headers",
